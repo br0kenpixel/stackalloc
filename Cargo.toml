@@ -1,0 +1,15 @@
+[package]
+name = "stackalloc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[dev-dependencies]
+panic-abort = "0.3.2"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
