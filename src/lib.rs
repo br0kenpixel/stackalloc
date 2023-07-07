@@ -34,18 +34,14 @@ impl<const MEMSIZE: usize, const NALLOCS: usize> StackAllocator<MEMSIZE, NALLOCS
 
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn free(&self, ptr: *mut u8) {
-        let start_index = unsafe { ptr.offset_from(self.mempool().as_ptr()) } as usize;
+        let start_index = unsafe { ptr.offset_from(self.mempool.as_ptr()) } as usize;
         let region = self.find_used_region(start_index);
 
         *region = AllocatedRegion::new_uninit();
     }
 
     pub fn mempool_addr(&self) -> usize {
-        self.mempool().as_ptr() as usize
-    }
-
-    fn mempool(&self) -> &[u8] {
-        self.mempool.get()
+        self.mempool.as_ptr() as usize
     }
 
     fn mempool_mut(&self) -> &mut [u8] {
@@ -54,10 +50,6 @@ impl<const MEMSIZE: usize, const NALLOCS: usize> StackAllocator<MEMSIZE, NALLOCS
 
     fn regions_mut(&self) -> &mut [AllocatedRegion] {
         self.regions.get_mut()
-    }
-
-    fn regions(&self) -> &[AllocatedRegion] {
-        self.regions.get()
     }
 
     fn find_used_region(&self, index: usize) -> &mut AllocatedRegion {
@@ -72,7 +64,7 @@ impl<const MEMSIZE: usize, const NALLOCS: usize> StackAllocator<MEMSIZE, NALLOCS
     }
 
     fn index_in_use(&self, i: usize) -> bool {
-        for region in self.regions() {
+        for region in self.regions.iter() {
             if region.init() && region.contains(i) {
                 return true;
             }
