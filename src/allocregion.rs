@@ -1,43 +1,71 @@
+use core::mem::MaybeUninit;
+
+// NOTE: Option<usize> can be used too, however MaybeUninit is zero-sized.
+//       Size of AllocatedRegion with Option<usize>      = 48
+//       Size of AllocatedRegion with MaybeUninit<usize> = 32 (incl. init)
+//       To ensure that the allocator has the least amount of overhead, MaybeUninit is used.
 pub struct AllocatedRegion {
-    start: Option<usize>,
-    end: Option<usize>,
-    length: Option<usize>,
+    init: bool,
+    start: MaybeUninit<usize>,
+    end: MaybeUninit<usize>,
+    length: MaybeUninit<usize>,
 }
 
 impl AllocatedRegion {
     pub const fn new(start: usize, size: usize) -> Self {
         Self {
-            start: Some(start),
-            end: Some(start + size - 1),
-            length: Some(size),
+            init: true,
+            start: MaybeUninit::new(start),
+            end: MaybeUninit::new(start + size - 1),
+            length: MaybeUninit::new(size),
         }
     }
 
     pub const fn new_uninit() -> Self {
         Self {
-            start: None,
-            end: None,
-            length: None,
+            init: false,
+            start: MaybeUninit::uninit(),
+            end: MaybeUninit::uninit(),
+            length: MaybeUninit::uninit(),
         }
     }
 
     pub const fn init(&self) -> bool {
-        self.start.is_some() && self.end.is_some() && self.length.is_some()
+        self.init
     }
 
-    pub fn size(&self) -> usize {
-        self.length.unwrap()
+    pub const fn size(&self) -> usize {
+        if !self.init() {
+            return 0;
+        }
+
+        // SAFETY: We just checked if the value is initialized
+        unsafe { self.length.assume_init() }
     }
 
-    pub fn start(&self) -> usize {
-        self.start.unwrap()
+    pub const fn start(&self) -> usize {
+        if !self.init() {
+            return 0;
+        }
+
+        // SAFETY: We just checked if the value is initialized
+        unsafe { self.start.assume_init() }
     }
 
-    pub fn end(&self) -> usize {
-        self.end.unwrap()
+    pub const fn end(&self) -> usize {
+        if !self.init() {
+            return 0;
+        }
+
+        // SAFETY: We just checked if the value is initialized
+        unsafe { self.end.assume_init() }
     }
 
-    pub fn contains(&self, val: usize) -> bool {
+    pub const fn contains(&self, val: usize) -> bool {
+        if !self.init() {
+            return false;
+        }
+
         val >= self.start() && val <= self.end()
     }
 }
