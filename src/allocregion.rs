@@ -4,8 +4,9 @@ use core::mem::MaybeUninit;
 //       Size of AllocatedRegion with Option<usize>      = 48
 //       Size of AllocatedRegion with MaybeUninit<usize> = 32 (incl. init)
 //       To ensure that the allocator has the least amount of overhead, MaybeUninit is used.
+//       Another benefit of using MaybeUninit is that all methods can be const.
 pub struct AllocatedRegion {
-    init: bool,
+    pub init: bool,
     start: MaybeUninit<usize>,
     end: MaybeUninit<usize>,
     length: MaybeUninit<usize>,
@@ -30,12 +31,8 @@ impl AllocatedRegion {
         }
     }
 
-    pub const fn init(&self) -> bool {
-        self.init
-    }
-
     pub const fn size(&self) -> usize {
-        if !self.init() {
+        if !self.init {
             return 0;
         }
 
@@ -44,7 +41,7 @@ impl AllocatedRegion {
     }
 
     pub const fn start(&self) -> usize {
-        if !self.init() {
+        if !self.init {
             return 0;
         }
 
@@ -53,7 +50,7 @@ impl AllocatedRegion {
     }
 
     pub const fn end(&self) -> usize {
-        if !self.init() {
+        if !self.init {
             return 0;
         }
 
@@ -62,7 +59,7 @@ impl AllocatedRegion {
     }
 
     pub const fn contains(&self, val: usize) -> bool {
-        if !self.init() {
+        if !self.init {
             return false;
         }
 

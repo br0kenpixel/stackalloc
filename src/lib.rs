@@ -55,17 +55,17 @@ impl<const MEMSIZE: usize, const NALLOCS: usize> StackAllocator<MEMSIZE, NALLOCS
     fn find_used_region(&self, index: usize) -> &mut AllocatedRegion {
         self.regions_mut()
             .iter_mut()
-            .find(|r| r.init() && r.start() == index)
+            .find(|r| r.init && r.start() == index)
             .unwrap()
     }
 
     fn find_next_uninit_region(&self) -> &mut AllocatedRegion {
-        self.regions_mut().iter_mut().find(|r| !r.init()).unwrap()
+        self.regions_mut().iter_mut().find(|r| !r.init).unwrap()
     }
 
     fn index_in_use(&self, i: usize) -> bool {
         for region in self.regions.iter() {
-            if region.init() && region.contains(i) {
+            if region.init && region.contains(i) {
                 return true;
             }
         }
